@@ -8,7 +8,8 @@ from colorama import Fore, Style
 # Custom formatter with color
 class CustomFormatter(logging.Formatter):
     """
-    A custom logging formatter that adds color to log messages based on their severity level.
+    A custom logging formatter that adds color to log messages based on their severity level,
+    and colors date, time, filename, function name, and output differently.
     """
 
     LOG_COLORS: dict[str, str] = {
@@ -18,32 +19,43 @@ class CustomFormatter(logging.Formatter):
         "ERROR": Fore.RED,
         "CRITICAL": Fore.MAGENTA,
     }
+    DATE_COLOR: str = Fore.CYAN
+    TIME_COLOR: str = Fore.LIGHTCYAN_EX
+    FILENAME_COLOR: str = Fore.LIGHTYELLOW_EX
+    FUNCNAME_COLOR: str = Fore.LIGHTMAGENTA_EX
+    MESSAGE_COLOR: str = Fore.WHITE
 
     def format(self, record: logging.LogRecord) -> str:
-        """
-        Format the log message with appropriate color based on the log level.
+        # Split asctime into date and time
+        asctime = self.formatTime(record, self.datefmt)
+        date, time = asctime.split(" ")
+        colored_date = f"{self.DATE_COLOR}{date}{Style.RESET_ALL}"
+        colored_time = f"{self.TIME_COLOR}{time}{Style.RESET_ALL}"
+        colored_filename = f"{self.FILENAME_COLOR}{record.filename}{Style.RESET_ALL}"
+        colored_funcname = f"{self.FUNCNAME_COLOR}{record.funcName}{Style.RESET_ALL}"
+        log_color = self.LOG_COLORS.get(record.levelname, "")
+        colored_message = f"{self.MESSAGE_COLOR}{record.getMessage()}{Style.RESET_ALL}"
 
-        Args:
-            record (LogRecord): The log record to format.
-
-        Returns:
-            str: The formatted log message with color.
-        """
-        log_color: str = self.LOG_COLORS.get(record.levelname, "")
-        reset_color: str = Style.RESET_ALL
-        log_message: str = super().format(record)
-        return f"{log_color}{log_message}{reset_color}"
+        # Compose the log line
+        log_line = (
+            f"{colored_date} {colored_time} - "
+            f"{colored_filename} - "
+            f"{colored_funcname} - "
+            f"{log_color}{record.levelname}{Style.RESET_ALL} - "
+            f"{colored_message}"
+        )
+        return log_line
 
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(filename)s - %(levelname)s - %(message)s",
+    format="%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
 for handler in logging.root.handlers:
     handler.setFormatter(
-        CustomFormatter("%(asctime)s - %(filename)s - %(levelname)s - %(message)s")
+        CustomFormatter("%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s - %(message)s")
     )
 
 
@@ -259,15 +271,15 @@ class Library:
                 f"Member: {member.name}, Borrowed Books: {member.borrowed_books}"
             )
 
-
-my_library = Library()
-my_library.borrow_book("1984", "Ishaan")
-my_library.display_borrowed_books(my_library.books)
-my_library.borrow_book("The Great Gatsby", "Alice")
-my_library.display_borrowed_books(my_library.books)
-# my_library.display_members(my_library.members)
-my_library.return_book("1984", "Ishaan")
-my_library.display_borrowed_books(my_library.books)
-my_library.borrow_book("the Hobbit", "Praharsh")
+if __name__ == "__main__":
+    my_library = Library()
+    my_library.borrow_book("1984", "Ishaan")
+    my_library.display_borrowed_books()
+    my_library.borrow_book("The Great Gatsby", "Alice")
+    my_library.display_borrowed_books()
+    # my_library.display_members(my_library.members)
+    my_library.return_book("1984", "Ishaan")
+    my_library.display_borrowed_books()
+    my_library.borrow_book("the Hobbit", "Praharsh")
 
 
