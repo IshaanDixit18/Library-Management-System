@@ -9,19 +9,20 @@ from colorama import Fore, Style
 class CustomFormatter(logging.Formatter):
     """
     A custom logging formatter that adds color to log messages based on their severity level,
-    and colors date, time, filename, function name, and output differently.
+    and colors date, time, filename, line number, function name, and output differently.
     """
 
     LOG_COLORS: dict[str, str] = {
         "DEBUG": Fore.BLUE,
         "INFO": Fore.GREEN,
-        "WARNING": Fore.YELLOW,
+        "WARNING": Fore.LIGHTRED_EX,  # Orange-like color
         "ERROR": Fore.RED,
         "CRITICAL": Fore.MAGENTA,
     }
     DATE_COLOR: str = Fore.CYAN
     TIME_COLOR: str = Fore.LIGHTCYAN_EX
     FILENAME_COLOR: str = Fore.LIGHTYELLOW_EX
+    LINENO_COLOR: str = Fore.LIGHTWHITE_EX
     FUNCNAME_COLOR: str = Fore.LIGHTMAGENTA_EX
     MESSAGE_COLOR: str = Fore.WHITE
 
@@ -32,6 +33,7 @@ class CustomFormatter(logging.Formatter):
         colored_date = f"{self.DATE_COLOR}{date}{Style.RESET_ALL}"
         colored_time = f"{self.TIME_COLOR}{time}{Style.RESET_ALL}"
         colored_filename = f"{self.FILENAME_COLOR}{record.filename}{Style.RESET_ALL}"
+        colored_lineno = f"{self.LINENO_COLOR}{record.lineno}{Style.RESET_ALL}"
         colored_funcname = f"{self.FUNCNAME_COLOR}{record.funcName}{Style.RESET_ALL}"
         log_color = self.LOG_COLORS.get(record.levelname, "")
         colored_message = f"{self.MESSAGE_COLOR}{record.getMessage()}{Style.RESET_ALL}"
@@ -39,23 +41,22 @@ class CustomFormatter(logging.Formatter):
         # Compose the log line
         log_line = (
             f"{colored_date} {colored_time} - "
-            f"{colored_filename} - "
+            f"{colored_filename}:{colored_lineno} - "
             f"{colored_funcname} - "
             f"{log_color}{record.levelname}{Style.RESET_ALL} - "
             f"{colored_message}"
         )
         return log_line
 
-
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s - %(message)s",
+    format="%(asctime)s - %(filename)s - %(lineno)d - %(funcName)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
 for handler in logging.root.handlers:
     handler.setFormatter(
-        CustomFormatter("%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s - %(message)s")
+        CustomFormatter("%(asctime)s - %(filename)s - %(lineno)d - %(funcName)s - %(levelname)s - %(message)s")
     )
 
 
